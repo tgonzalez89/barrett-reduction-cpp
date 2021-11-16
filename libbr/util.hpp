@@ -9,7 +9,6 @@ namespace br
     namespace util
     {
 
-
         // https://stackoverflow.com/a/50958815/6553631
     #ifdef __SIZEOF_INT128__     // GNU C
         static inline
