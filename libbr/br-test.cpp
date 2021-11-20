@@ -25,7 +25,7 @@ void test_br32()
                 const uint32_t ref = x % n;
                 if (res != ref) {
                     std::cout << "res=" << res << ", ref=" << ref << "\n";
-                    std::cout << "x=" << x << ", n=" << n << ", k=" << br.k << ", r=" << br.r << "\n";
+                    std::cout << "x=" << x << ", n=" << n << ", r=" << br.r << "\n";
                     throw std::runtime_error("Barrett reduction test failed.");
                 }
             }
@@ -54,7 +54,7 @@ void test_br64()
                 const uint64_t ref = x % n;
                 if (res != ref) {
                     std::cout << "res=" << res << ", ref=" << ref << "\n";
-                    std::cout << "x=" << x << ", n=" << n << ", k=" << br.k << ", r=" << br.r << "\n";
+                    std::cout << "x=" << x << ", n=" << n << ", r=" << br.r << "\n";
                     throw std::runtime_error("Barrett reduction test failed.");
                 }
             }
@@ -90,7 +90,7 @@ void test_br128()
                 const uint64_t ref = x % n;
                 if ((res1 != ref && n < (1UL<<63)) || res2 != ref) {
                     std::cout << "res1=" << res1 << ", res2=" << res2 << ", ref=" << ref << "\n";
-                    std::cout << "x_hi=" << x_hi << ", x_lo=" << x_lo << ", n=" << n << ", k=" << br.k << ", r=" << br.r << ", s=" << br.s << ", t=" << br.t << "\n";
+                    std::cout << "x_hi=" << x_hi << ", x_lo=" << x_lo << ", n=" << n << ", r=" << br.r << ", s=" << br.s << ", t=" << br.t << "\n";
                     throw std::runtime_error("Barrett reduction test failed.");
                 }
             }
