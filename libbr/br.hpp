@@ -112,7 +112,9 @@ namespace br {
 
     class BarrettRed128
     {
+#ifdef USE_128_BIT
     using uint128_t = unsigned __int128;
+#endif
 
     public:
         BarrettRed128(const uint64_t _n) : n(_n), r(0), s(0), t(0)
@@ -136,13 +138,10 @@ namespace br {
             // This calculation alternative fits in 128-bit arithmetic.
             // The second part, '2^(k/2) * r', can be ignored since it's the equivalent of a shift left by 64
             // and since 's' is only 64 bits, the lower 64 bits of '2^(k/2) * r' will always be zero.
-        #ifdef __SIZEOF_INT128__
-            s = (~static_cast<uint128_t>(0)) / n;
-        /*#elif defined(_M_X64)
-            s = _udiv128(UINT64_MAX, UINT64_MAX, n, NULL);
-        #else*/
-            // TODO: Calculate 's' with 64-bit arithmetic only.
-            throw std::invalid_argument("CPU architecture and/or OS not supported.");
+        #ifdef USE_128_BIT
+            s = ~static_cast<uint128_t>(0) / n;
+        #else
+            s = util::longdiv128_1s(n);
         #endif
 
             // t = 2^(k/2) - r * n
@@ -159,36 +158,32 @@ namespace br {
         #endif
         }
 
+    #ifdef USE_128_BIT
         // Use 128-bit arithmetic.
         uint64_t calc(const uint128_t x) // x mod n
         {
-        #ifdef USE_128_BIT
             if (x >= n2) {
-                uint64_t x_lo = static_cast<uint64_t>(x);
-                uint64_t x_hi = x >> 64;
-                uint64_t n2_lo = static_cast<uint64_t>(n2);
-                uint64_t n2_hi = n2 >> 64;
-        #else
-            uint64_t x_lo = static_cast<uint64_t>(x);
-            uint64_t x_hi = x >> 64;
-            if (x_hi > n2_hi || (x_hi == n2_hi && x_lo >= n2_lo)) {
-        #endif
+                const uint64_t x_lo = x;
+                const uint64_t x_hi = x >> 64;
+                const uint64_t n2_lo = n2;
+                const uint64_t n2_hi = n2 >> 64;
                 std::cout << "x_hi=" << x_hi << ", x_lo=" << x_lo << ", n=" << n << ", n2_hi=" << n2_hi << ", n2_lo=" << n2_lo << "\n";
                 throw std::invalid_argument("Input must be less than modulus^2.");
             }
 
             const uint128_t a = x >> 64;
-            const uint128_t b = static_cast<uint64_t>(x);
+            const uint64_t b = x;
             const uint128_t qa = (a * s) >> 64;
-            const uint128_t qb = (b * r) >> 64;
+            const uint64_t qb = (static_cast<uint128_t>(b) * r) >> 64;
             uint128_t a1 = a * t - qa * n;
             if (a1 >= n) a1 -= n;
-            uint128_t b1 = b - qb * n;
+            uint64_t b1 = b - qb * n;
             if (b1 >= n) b1 -= n;
             uint128_t x1 = a1 + b1;
             if (x1 >= n) x1 -= n;
             return x1;
         }
+    #endif
 
         // Use 64-bit arithmetic.
         uint64_t calc(const uint64_t x_hi, const uint64_t x_lo) // x mod n
@@ -198,10 +193,12 @@ namespace br {
                 throw std::invalid_argument("Modulus must be < 2^63.");
             }
         #ifdef USE_128_BIT
-            const uint64_t n2_lo = static_cast<uint64_t>(n2);
-            const uint64_t n2_hi = n2 >> 64;
-        #endif
+            if (((static_cast<uint128_t>(x_hi) << 64) | x_lo) >= n2) {
+                const uint64_t n2_lo = n2;
+                const uint64_t n2_hi = n2 >> 64;
+        #else
             if (x_hi > n2_hi || (x_hi == n2_hi && x_lo >= n2_lo)) {
+        #endif
                 std::cout << "x_hi=" << x_hi << ", x_lo=" << x_lo << ", n=" << n << ", n2_hi=" << n2_hi << ", n2_lo=" << n2_lo << "\n";
                 throw std::invalid_argument("Input must be less than modulus^2.");
             }

@@ -60,6 +60,73 @@ namespace br
         }
     #endif
 
+        // https://en.wikipedia.org/wiki/Division_algorithm#Integer_division_(unsigned)_with_remainder
+
+        uint64_t longdiv64(uint64_t n, uint64_t d) {
+            uint64_t q = 0, r = 0;
+
+            for (int i = 63; i >= 0; --i) {
+                r <<= 1;
+
+                const uint64_t n_i = (n & (1UL << i)) != 0;
+                r = (r & ~1UL) | n_i;
+
+                if (r >= d) {
+                    r -= d;
+                    q |= 1UL << i;
+                }
+            }
+            return q;
+        }
+
+        uint64_t longdiv128(uint64_t n_hi, uint64_t n_lo, uint64_t d) {
+            uint64_t q = 0, r_hi = 0, r_lo = 0;
+
+            for (int i = 127; i >= 0; --i) {
+                r_hi = (r_hi << 1) | (r_lo >> 63);
+                r_lo <<= 1;
+
+                uint64_t n_i;
+                if (i >= 64)
+                    n_i = (n_hi & (1UL << (i - 64))) != 0;
+                else
+                    n_i = (n_lo & (1UL << i)) != 0;
+                r_lo = (r_lo & ~1UL) | n_i;
+
+                if (r_hi || r_lo >= d) {
+                    const uint64_t borrow = d > r_lo;
+                    r_lo -= d;
+                    r_hi -= borrow;
+
+                    if (i < 64)
+                        q |= 1UL << i;
+                }
+            }
+            return q;
+        }
+
+        // (2^128 - 1) / d
+        uint64_t longdiv128_1s(uint64_t d) {
+            uint64_t q = 0, r_hi = 0, r_lo = 0;
+
+            for (int i = 127; i >= 0; --i) {
+                r_hi = (r_hi << 1) | (r_lo >> 63);
+                r_lo <<= 1;
+
+                r_lo |= 1UL;
+
+                if (r_hi || r_lo >= d) {
+                    const uint64_t borrow = d > r_lo;
+                    r_lo -= d;
+                    r_hi -= borrow;
+
+                    if (i < 64)
+                        q |= 1UL << i;
+                }
+            }
+            return q;
+        }
+
     } // namespace util
 
 } // namespace br

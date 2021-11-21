@@ -3,6 +3,7 @@
 
 #include "libbr/br.hpp"
 
+#define ENABLE_LONGDIV_TEST 0
 
 void test_br32()
 {
@@ -81,15 +82,19 @@ void test_br128()
             std::uniform_int_distribution<uint128_t> distr_x(0, n2);
             for (size_t j = 0; j < 1000; ++j) {
                 const uint128_t x = distr_x(gen);
-                const uint64_t x_lo = static_cast<uint64_t>(x);
-                const uint64_t x_hi = static_cast<uint64_t>(x >> 64);
+                const uint64_t x_lo = x;
+                const uint64_t x_hi = x >> 64;
+                const uint64_t ref = x % n;
                 uint64_t res1 = 0;
                 if (n < (1UL<<63))
                     res1 = br.calc(x_hi, x_lo);
+            #ifdef USE_128_BIT
                 const uint64_t res2 = br.calc(x);
-                const uint64_t ref = x % n;
                 if ((res1 != ref && n < (1UL<<63)) || res2 != ref) {
-                    std::cout << "res1=" << res1 << ", res2=" << res2 << ", ref=" << ref << "\n";
+            #else
+                if ((res1 != ref && n < (1UL<<63))) {
+            #endif
+                    std::cout << "res1=" << res1 << ", ref=" << ref << "\n";
                     std::cout << "x_hi=" << x_hi << ", x_lo=" << x_lo << ", n=" << n << ", r=" << br.r << ", s=" << br.s << ", t=" << br.t << "\n";
                     throw std::runtime_error("Barrett reduction test failed.");
                 }
@@ -98,8 +103,92 @@ void test_br128()
     }
 }
 
+#if ENABLE_LONGDIV_TEST
+void test_longdiv64() {
+    std::cout << "Testing longdiv64.\n";
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint64_t> distr(1, UINT64_MAX);
+    for (int64_t i = 0; i < 10000000; ++i) {
+        uint64_t d = distr(gen);
+        uint64_t n = distr(gen);
+        uint64_t res = br::util::longdiv64(d, n);
+        uint64_t ref = d / n;
+        if (res != ref) {
+            std::cout << "d=" << d << " n=" << n << " res=" << res << " ref=" << ref << "\n";
+            throw std::runtime_error("longdiv64 test failed.");
+        }
+        res = br::util::longdiv64(UINT64_MAX, n);
+        ref = UINT64_MAX / n;
+        if (res != ref) {
+            std::cout << "d=" << d << " n=" << n << " res=" << res << " ref=" << ref << "\n";
+            throw std::runtime_error("longdiv64 test failed. 2");
+        }
+    }
+}
+
+#ifdef __SIZEOF_INT128__
+void test_longdiv128() {
+    using uint128_t = unsigned __int128;
+
+    std::cout << "Testing longdiv128.\n";
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint128_t> distr128(1, ~static_cast<uint128_t>(0));
+    std::uniform_int_distribution<uint64_t> distr64(1, UINT64_MAX);
+    for (int64_t i = 0; i < 10000000; ++i) {
+        uint128_t d = distr128(gen);
+        uint64_t n = distr64(gen);
+        const uint64_t d_lo = d;
+        const uint64_t d_hi = d >> 64;
+        uint64_t res = br::util::longdiv128(d_hi, d_lo, n);
+        uint64_t ref = d / n;
+        if (res != ref) {
+            std::cout << "d_hi=" << d_hi << " d_lo=" << d_lo << " n=" << n << " res=" << res << " ref=" << ref << "\n";
+            throw std::runtime_error("longdiv128 test failed.");
+        }
+        res = br::util::longdiv128(UINT64_MAX, UINT64_MAX, n);
+        ref = ~static_cast<uint128_t>(0) / n;
+        if (res != ref) {
+            std::cout << "d_hi=" << d_hi << " d_lo=" << d_lo << " n=" << n << " res=" << res << " ref=" << ref << "\n";
+            throw std::runtime_error("longdiv128 test failed. 2");
+        }
+    }
+}
+
+void test_longdiv128_1s() {
+    using uint128_t = unsigned __int128;
+
+    std::cout << "Testing longdiv128_1s.\n";
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint64_t> distr(1, UINT64_MAX);
+    for (int64_t i = 0; i < 10000000; ++i) {
+        uint64_t d = distr(gen);
+        uint64_t res = br::util::longdiv128_1s(d);
+        uint64_t ref = ~static_cast<uint128_t>(0) / d;
+        if (res != ref) {
+            std::cout << "d=" << d << " res=" << res << " ref=" << ref << "\n";
+            throw std::runtime_error("longdiv128_1s test failed.");
+        }
+    }
+}
+#endif
+
+#endif
+
 int main()
 {
+#if ENABLE_LONGDIV_TEST
+    test_longdiv64();
+#ifdef __SIZEOF_INT128__
+    test_longdiv128();
+    test_longdiv128_1s();
+#endif
+#endif
     test_br32();
     test_br64();
     test_br128();
