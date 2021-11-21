@@ -134,10 +134,16 @@ namespace br {
             // s = 2^k / n - 2^(k/2) * r
             // The first part, '2^k / n', can be calculated as '(2^k - 1) / n' when n is not a power of 2.
             // This calculation alternative fits in 128-bit arithmetic.
-            const uint128_t two_pow_128_div_n = (~static_cast<uint128_t>(0)) / n;
             // The second part, '2^(k/2) * r', can be ignored since it's the equivalent of a shift left by 64
             // and since 's' is only 64 bits, the lower 64 bits of '2^(k/2) * r' will always be zero.
-            s = two_pow_128_div_n;
+        #ifdef __SIZEOF_INT128__
+            s = (~static_cast<uint128_t>(0)) / n;
+        /*#elif defined(_M_X64)
+            s = _udiv128(UINT64_MAX, UINT64_MAX, n, NULL);
+        #else*/
+            // TODO: Calculate 's' with 64-bit arithmetic only.
+            throw std::invalid_argument("CPU architecture and/or OS not supported.");
+        #endif
 
             // t = 2^(k/2) - r * n
             // Can be calculated as '2^(k/2) - 1 - r * n + 1' since 'r * n' will never exceed 64 bits.

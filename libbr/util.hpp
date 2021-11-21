@@ -10,7 +10,7 @@ namespace br
     {
 
         // https://stackoverflow.com/a/50958815/6553631
-    #ifdef __SIZEOF_INT128__     // GNU C
+    #ifdef __SIZEOF_INT128__    // GNU C
         static inline
         uint64_t mulhi64(uint64_t a, uint64_t b) {
             unsigned __int128 prod =  a * (unsigned __int128)b;
@@ -19,14 +19,14 @@ namespace br
 
     #elif defined(_M_X64) || defined(_M_ARM64)    // MSVC
         // MSVC for x86-64 or AArch64
-        // possibly also  || defined(_M_IA64) || defined(_WIN64)
-        // but the docs only guarantee x86-64!  Don't use *just* _WIN64; it doesn't include AArch64 Android / Linux
+        // possibly also || defined(_M_IA64) || defined(_WIN64)
+        // but the docs only guarantee x86-64! Don't use *just* _WIN64; it doesn't include AArch64 Android / Linux
 
         // https://docs.microsoft.com/en-gb/cpp/intrinsics/umulh
         #include <intrin.h>
         #define mulhi64 __umulh
 
-    #elif defined(_M_IA64) // || defined(_M_ARM)    // MSVC again
+    #elif defined(_M_IA64) // || defined(_M_ARM)    // MSVC
         // https://docs.microsoft.com/en-gb/cpp/intrinsics/umul128
         // incorrectly say that _umul128 is available for ARM
         // which would be weird because there's no single insn on AArch32
