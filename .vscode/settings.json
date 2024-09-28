@@ -10,5 +10,33 @@
         "editor.defaultFormatter": "ms-vscode.cpptools"
     },
     "C_Cpp.clang_format_fallbackStyle": "Microsoft",
-    "C_Cpp.codeAnalysis.clangTidy.enabled": true
+    "C_Cpp.codeAnalysis.clangTidy.enabled": true,
+    "C_Cpp.codeAnalysis.clangTidy.checks.enabled": [
+        "boost-use-to-string",
+        "bugprone-*",
+        "cert-*",
+        "clang-analyzer-*",
+        "concurrency-*",
+        "cppcoreguidelines-*",
+        "hicpp-*",
+        "misc-*",
+        "modernize-*",
+        "performance-*",
+        "portability-*",
+        "readability-*"
+    ],
+    "C_Cpp.codeAnalysis.clangTidy.checks.disabled": [
+        "bugprone-easily-swappable-parameters",
+        "bugprone-exception-escape",
+        "cppcoreguidelines-avoid-magic-numbers",
+        "readability-identifier-length",
+        "readability-magic-numbers"
+    ],
+    "cSpell.customDictionaries": {
+        "custom-words": {
+            "name": "custom-words",
+            "path": "${workspaceFolder}/.vscode/custom-words.txt",
+            "addWords": true
+        }
+    }
 }

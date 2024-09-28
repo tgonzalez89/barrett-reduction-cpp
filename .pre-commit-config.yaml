@@ -35,4 +35,5 @@ repos:
         args: [
             --use-color,
             --warnings-as-errors=*, # Warnings don't make the check fail.
+            --extra-arg=-I.,
           ]
