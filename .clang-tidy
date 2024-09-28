@@ -1,0 +1,1 @@
+Checks: boost-use-to-string,bugprone-*,cert-*,clang-analyzer-*,concurrency-*,cppcoreguidelines-*,hicpp-*,misc-*,modernize-*,performance-*,portability-*,readability-*,-bugprone-easily-swappable-parameters,-bugprone-exception-escape,-cppcoreguidelines-avoid-magic-numbers,-readability-identifier-length,-readability-magic-numbers
